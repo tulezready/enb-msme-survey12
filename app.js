@@ -436,6 +436,11 @@ function resetForm(){
 }
 
 function renderAllDynamicSections(){
+  // Temporarily show all panels so render functions can find their table elements
+  const panels = document.querySelectorAll(".step-panel");
+  const prevDisplay = [];
+  panels.forEach((p, i) => { prevDisplay[i] = p.style.display; p.style.display = "block"; });
+
   renderBusinessActivities();
   renderFlatChecklist("trainingsRequired", TRAININGS_REQUIRED_LIST, state.trainingsRequired.selected);
   renderFlatChecklist("assistanceRequired", ASSISTANCE_REQUIRED_LIST, state.assistanceRequired.selected);
@@ -447,6 +452,9 @@ function renderAllDynamicSections(){
   renderLoansTable();
   renderCashCropsTable();
   renderInformalTable();
+
+  // Restore display state
+  panels.forEach((p, i) => { p.style.display = prevDisplay[i]; });
 }
 
 function loadFormFromRecord(rec){
