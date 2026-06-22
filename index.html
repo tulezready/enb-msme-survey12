@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
+<title>ENB Economic &amp; MSME Survey</title>
+<meta name="description" content="Division of Commerce &amp; Industry — Economic &amp; MSME Survey data collection" />
+<meta name="theme-color" content="#1B4332" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --ink:#26241F;
+    --ink-soft:#5B5648;
+    --paper:#FAF7F0;
+    --surface:#FFFFFF;
+    --line:#E4DCC8;
+    --pine:#1B4332;
+    --pine-deep:#11301F;
+    --pine-mist:#E7EFE9;
+    --ochre:#C98A3B;
+    --ochre-soft:#F3E2C7;
+    --rust:#A8432A;
+    --rust-soft:#F4E0D9;
+    --leaf:#3F7D58;
+    --leaf-soft:#E3EFE6;
+    --radius:10px;
+    --shadow:0 1px 2px rgba(38,36,31,0.06), 0 6px 20px -8px rgba(38,36,31,0.12);
+    --font-display:"Source Serif 4", Georgia, serif;
+    --font-body:"Inter", system-ui, -apple-system, sans-serif;
+    --font-mono:"JetBrains Mono", ui-monospace, monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  ::selection{background:var(--ochre-soft);}
+  a{color:var(--pine);}
+  button{font-family:inherit;}
+  :focus-visible{outline:2.5px solid var(--ochre); outline-offset:2px;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+  }
+
+  /* ---------- Header ---------- */
+  .topbar{
+    background:var(--pine);
+    color:#fff;
+    padding:14px 16px;
+    position:sticky; top:0; z-index:40;
+    box-shadow:var(--shadow);
+  }
+  .topbar-inner{
+    max-width:1080px; margin:0 auto;
+    display:flex; align-items:center; gap:12px;
+  }
+  .crest{
+    width:40px; height:40px; flex:none; border-radius:50%;
+    background:var(--ochre);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-weight:700; font-size:15px; color:var(--pine-deep);
+    border:2px solid rgba(255,255,255,0.65);
+  }
+  .topbar h1{
+    font-family:var(--font-display); font-weight:600;
+    font-size:16px; line-height:1.25; margin:0;
+  }
+  .topbar .eyebrow{
+    font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--ochre-soft); opacity:0.95; margin:0 0 2px;
+    font-weight:600;
+  }
+  .topbar-meta{margin-left:auto; text-align:right; font-size:11px; color:rgba(255,255,255,0.75); display:none;}
+  @media(min-width:560px){.topbar-meta{display:block;}}
+
+  .tabs{
+    max-width:1080px; margin:10px auto 0; display:flex; gap:6px;
+    border-bottom:1px solid rgba(255,255,255,0.18);
+  }
+  .tab-btn{
+    background:none; border:none; color:rgba(255,255,255,0.72);
+    padding:9px 4px; font-size:13.5px; font-weight:600; cursor:pointer;
+    border-bottom:2.5px solid transparent; margin-bottom:-1px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .tab-btn.active{color:#fff; border-bottom-color:var(--ochre);}
+  .tab-btn .count-pill{
+    background:rgba(255,255,255,0.16); border-radius:99px; padding:1px 7px; font-size:10.5px;
+  }
+
+  /* ---------- Layout ---------- */
+  main{max-width:1080px; margin:0 auto; padding:18px 14px 60px;}
+  .view{display:none;}
+  .view.active{display:block; animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
+
+  h2.section-title{
+    font-family:var(--font-display); font-weight:600; font-size:20px;
+    margin:0 0 14px; color:var(--pine-deep);
+  }
+
+  /* ---------- Dashboard ---------- */
+  .stat-grid{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:18px;
+  }
+  @media(min-width:640px){.stat-grid{grid-template-columns:repeat(4,1fr);}}
+  .stat-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    padding:14px; box-shadow:var(--shadow);
+  }
+  .stat-card .num{
+    font-family:var(--font-mono); font-weight:500; font-size:26px; color:var(--pine-deep);
+    font-variant-numeric:tabular-nums;
+  }
+  .stat-card .label{font-size:12px; color:var(--ink-soft); margin-top:2px;}
+  .stat-card.accent{border-left:4px solid var(--ochre);}
+  .stat-card.leaf{border-left:4px solid var(--leaf);}
+  .stat-card.rust{border-left:4px solid var(--rust);}
+  .stat-card.pine{border-left:4px solid var(--pine);}
+
+  .panel{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px; box-shadow:var(--shadow); margin-bottom:14px;
+  }
+  .panel h3{
+    font-family:var(--font-display); font-size:15px; margin:0 0 12px; color:var(--pine-deep);
+  }
+  .bar-row{display:flex; align-items:center; gap:10px; font-size:13px; margin-bottom:9px;}
+  .bar-row .bar-label{width:84px; flex:none; color:var(--ink-soft); font-weight:500;}
+  .bar-track{flex:1; background:var(--pine-mist); border-radius:5px; height:9px; overflow:hidden;}
+  .bar-fill{height:100%; background:var(--pine); border-radius:5px;}
+  .bar-row .bar-num{width:28px; text-align:right; font-family:var(--font-mono); font-size:12px; color:var(--ink-soft);}
+
+  .recent-item{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:10px 0; border-bottom:1px solid var(--line); gap:10px; cursor:pointer;
+  }
+  .recent-item:last-child{border-bottom:none;}
+  .recent-item .who{font-weight:600; font-size:13.5px;}
+  .recent-item .where{font-size:12px; color:var(--ink-soft);}
+  .badge{
+    font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:99px; letter-spacing:0.02em;
+    white-space:nowrap;
+  }
+  .badge.formal{background:var(--leaf-soft); color:var(--leaf);}
+  .badge.informal{background:var(--ochre-soft); color:#8A5A1E;}
+  .badge.none{background:var(--rust-soft); color:var(--rust);}
+  .empty-state{
+    text-align:center; padding:32px 16px; color:var(--ink-soft);
+  }
+  .empty-state .glyph{font-size:26px; margin-bottom:8px;}
+
+  /* ---------- Forms ---------- */
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block; font-size:12.5px; font-weight:600; color:var(--ink-soft);
+    margin-bottom:5px; letter-spacing:0.01em;
+  }
+  .field .hint{font-size:11px; color:var(--ink-soft); opacity:0.8; margin-top:4px;}
+  input[type=text], input[type=number], input[type=tel], input[type=date], input[type=email],
+  select, textarea{
+    width:100%; padding:10px 11px; border:1px solid var(--line); border-radius:8px;
+    font-size:14.5px; font-family:inherit; background:#fff; color:var(--ink);
+  }
+  input:focus, select:focus, textarea:focus{border-color:var(--pine);}
+  textarea{resize:vertical; min-height:64px;}
+  .field-row{display:grid; grid-template-columns:1fr; gap:12px;}
+  @media(min-width:640px){.field-row.cols-2{grid-template-columns:1fr 1fr;}
+    .field-row.cols-3{grid-template-columns:1fr 1fr 1fr;}}
+
+  .radio-pills{display:flex; flex-wrap:wrap; gap:8px;}
+  .radio-pill{
+    border:1.5px solid var(--line); border-radius:99px; padding:8px 15px; font-size:13px;
+    cursor:pointer; background:#fff; font-weight:600; color:var(--ink-soft);
+  }
+  .radio-pill input{display:none;}
+  .radio-pill.checked{border-color:var(--pine); background:var(--pine-mist); color:var(--pine-deep);}
+
+  .check-grid{display:grid; grid-template-columns:1fr; gap:8px;}
+  @media(min-width:560px){.check-grid{grid-template-columns:1fr 1fr;}}
+  .check-item{
+    display:flex; align-items:center; gap:9px; font-size:13.5px; padding:8px 10px;
+    border:1px solid var(--line); border-radius:8px; cursor:pointer; background:#fff;
+  }
+  .check-item input{width:16px; height:16px; accent-color:var(--pine); flex:none;}
+  .check-item.checked{background:var(--pine-mist); border-color:var(--pine);}
+
+  .category-block{margin-bottom:16px;}
+  .category-block .cat-label{
+    font-family:var(--font-display); font-weight:600; font-size:13.5px; color:var(--ochre);
+    text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px; display:block;
+  }
+
+  table.data-table{width:100%; border-collapse:collapse; font-size:13px; margin-top:6px;}
+  table.data-table th{
+    text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:0.04em;
+    color:var(--ink-soft); padding:7px 8px; border-bottom:2px solid var(--line); white-space:nowrap;
+  }
+  table.data-table td{padding:5px 6px; border-bottom:1px solid var(--line); vertical-align:middle;}
+  table.data-table input, table.data-table select{padding:7px 8px; font-size:13px; min-width:90px;}
+  table.data-table .rm-row{
+    background:none; border:none; color:var(--rust); cursor:pointer; font-size:16px; padding:4px 8px;
+  }
+  .add-row-btn{
+    background:none; border:1.5px dashed var(--line); color:var(--pine); font-weight:600;
+    font-size:12.5px; padding:8px 12px; border-radius:8px; cursor:pointer; margin-top:6px; width:100%;
+  }
+  .table-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch; margin:0 -16px; padding:0 16px;}
+
+  /* ---------- Stepper ---------- */
+  .stepper{display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; margin-bottom:18px; -webkit-overflow-scrolling:touch;}
+  .step-pip{
+    flex:none; display:flex; flex-direction:column; align-items:center; gap:5px;
+    cursor:pointer; opacity:0.45;
+  }
+  .step-pip.active, .step-pip.done{opacity:1;}
+  .step-pip .letter{
+    width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-weight:700; font-size:13px; border:2px solid var(--line);
+    background:#fff; color:var(--ink-soft);
+  }
+  .step-pip.active .letter{border-color:var(--pine); background:var(--pine); color:#fff;}
+  .step-pip.done .letter{border-color:var(--leaf); background:var(--leaf-soft); color:var(--leaf);}
+  .step-pip .step-name{font-size:9.5px; font-weight:600; color:var(--ink-soft); white-space:nowrap;}
+
+  .step-panel{display:none;}
+  .step-panel.active{display:block; animation:fade .2s ease;}
+  .step-head{
+    display:flex; align-items:baseline; gap:10px; margin-bottom:4px;
+    border-bottom:2px solid var(--pine-mist); padding-bottom:10px; margin-bottom:16px;
+  }
+  .step-head .big-letter{
+    font-family:var(--font-display); font-size:28px; font-weight:700; color:var(--ochre); line-height:1;
+  }
+  .step-head h2{font-family:var(--font-display); font-size:18px; margin:0; color:var(--pine-deep);}
+  .step-nav{display:flex; justify-content:space-between; gap:10px; margin-top:22px; padding-top:16px; border-top:1px solid var(--line);}
+
+  .btn{
+    border:none; border-radius:8px; padding:11px 18px; font-weight:600; font-size:14px; cursor:pointer;
+    display:inline-flex; align-items:center; gap:7px; justify-content:center;
+  }
+  .btn-primary{background:var(--pine); color:#fff;}
+  .btn-primary:hover{background:var(--pine-deep);}
+  .btn-ghost{background:none; color:var(--pine); border:1.5px solid var(--line);}
+  .btn-ghost:hover{border-color:var(--pine);}
+  .btn-danger{background:var(--rust-soft); color:var(--rust);}
+  .btn:disabled{opacity:0.4; cursor:not-allowed;}
+  .btn-sm{padding:7px 12px; font-size:12.5px;}
+  .btn-block{width:100%;}
+
+  .conditional-note{
+    background:var(--ochre-soft); border-radius:8px; padding:10px 12px; font-size:12.5px;
+    color:#7A5118; margin-bottom:16px; display:flex; gap:8px; align-items:flex-start;
+  }
+
+  /* ---------- Records ---------- */
+  .toolbar{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;}
+  .toolbar input[type=search]{flex:1; min-width:160px;}
+  .toolbar select{width:auto; flex:none;}
+  .record-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    padding:13px 14px; margin-bottom:9px; box-shadow:var(--shadow);
+  }
+  .record-card .top-row{display:flex; justify-content:space-between; gap:8px; align-items:flex-start;}
+  .record-card .name{font-weight:700; font-size:14.5px;}
+  .record-card .meta{font-size:12px; color:var(--ink-soft); margin-top:3px;}
+  .record-card .actions{display:flex; gap:6px; margin-top:10px;}
+
+  /* ---------- Modal ---------- */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(20,18,14,0.55); z-index:80;
+    display:none; align-items:flex-end; justify-content:center;
+  }
+  .modal-backdrop.open{display:flex;}
+  @media(min-width:640px){.modal-backdrop{align-items:center;}}
+  .modal{
+    background:#fff; width:100%; max-width:640px; max-height:88vh; overflow-y:auto;
+    border-radius:14px 14px 0 0; padding:20px; box-shadow:0 -8px 30px rgba(0,0,0,0.25);
+  }
+  @media(min-width:640px){.modal{border-radius:14px;}}
+  .modal h3{font-family:var(--font-display); margin:0 0 4px; color:var(--pine-deep);}
+  .modal .close-x{position:absolute; top:14px; right:16px; background:none; border:none; font-size:20px; cursor:pointer; color:var(--ink-soft);}
+  .detail-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; font-size:13px; margin:14px 0;}
+  .detail-grid .dt-label{color:var(--ink-soft); font-size:11px; text-transform:uppercase; letter-spacing:0.03em;}
+  .detail-grid .dt-val{font-weight:600;}
+  .detail-section-title{
+    font-family:var(--font-display); font-weight:600; font-size:13.5px; color:var(--ochre);
+    margin:18px 0 6px; text-transform:uppercase; letter-spacing:0.05em;
+  }
+
+  .toast{
+    position:fixed; bottom:18px; left:50%; transform:translateX(-50%);
+    background:var(--pine-deep); color:#fff; padding:11px 20px; border-radius:99px;
+    font-size:13.5px; font-weight:600; box-shadow:var(--shadow); z-index:100;
+    opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(-6px);}
+
+  .spinner{
+    width:16px; height:16px; border:2.5px solid rgba(255,255,255,0.4); border-top-color:#fff;
+    border-radius:50%; animation:spin .7s linear infinite; display:inline-block;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .sync-banner{
+    background:var(--rust-soft); color:var(--rust); font-size:12px; font-weight:600;
+    text-align:center; padding:7px; display:none;
+  }
+  .sync-banner.show{display:block;}
+</style>
+</head>
+<body>
+
+<div class="sync-banner" id="syncBanner">Working offline from your last sync — changes will save once you're back online.</div>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="crest">ENB</div>
+    <div>
+      <p class="eyebrow">Division of Commerce &amp; Industry</p>
+      <h1>Economic &amp; MSME Survey</h1>
+    </div>
+    <div class="topbar-meta" id="topbarMeta">East New Britain Provincial Administration</div>
+  </div>
+  <nav class="tabs">
+    <button class="tab-btn active" data-view="dashboard">Dashboard</button>
+    <button class="tab-btn" data-view="survey">New Survey</button>
+    <button class="tab-btn" data-view="records">Records <span class="count-pill" id="recordsCount">0</span></button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ============ DASHBOARD ============ -->
+  <section class="view active" id="view-dashboard">
+    <h2 class="section-title">Overview</h2>
+    <div class="stat-grid">
+      <div class="stat-card pine"><div class="num" id="statTotal">0</div><div class="label">Households surveyed</div></div>
+      <div class="stat-card leaf"><div class="num" id="statFormal">0</div><div class="label">Formal businesses</div></div>
+      <div class="stat-card accent"><div class="num" id="statInformal">0</div><div class="label">Informal businesses</div></div>
+      <div class="stat-card rust"><div class="num" id="statNone">0</div><div class="label">No business</div></div>
+    </div>
+
+    <div class="panel">
+      <h3>By district</h3>
+      <div id="districtBars"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Top business activities</h3>
+      <div id="activityBars"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Recent entries</h3>
+      <div id="recentList"></div>
+    </div>
+  </section>
+
+  <!-- ============ SURVEY ============ -->
+  <section class="view" id="view-survey">
+    <h2 class="section-title" id="surveyTitle">New Survey</h2>
+
+    <div class="stepper" id="stepper"></div>
+
+    <form id="surveyForm" onsubmit="return false;">
+
+      <!-- STEP A -->
+      <div class="step-panel" data-step="A">
+        <div class="step-head"><span class="big-letter">A</span><h2>Location</h2></div>
+        <div class="field-row cols-2">
+          <div class="field">
+            <label for="f_district">District</label>
+            <select id="f_district" data-field="district">
+              <option value="">Select district</option>
+              <option>Gazelle</option><option>Kokopo</option><option>Pomio</option><option>Rabaul</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="f_llg">LLG</label>
+            <input type="text" id="f_llg" data-field="llg" placeholder="Local Level Government" />
+          </div>
+        </div>
+        <div class="field-row cols-2">
+          <div class="field">
+            <label for="f_village">Village</label>
+            <input type="text" id="f_village" data-field="village" />
+          </div>
+          <div class="field">
+            <label for="f_ward">Ward</label>
+            <input type="text" id="f_ward" data-field="ward" />
+          </div>
+        </div>
+        <div class="field-row cols-2">
+          <div class="field">
+            <label for="f_household_no">Household No.</label>
+            <input type="text" id="f_household_no" data-field="household_no" />
+          </div>
+          <div class="field">
+            <label for="f_date_collected">Date data collected</label>
+            <input type="date" id="f_date_collected" data-field="date_collected" />
+          </div>
+        </div>
+        <div class="field-row cols-2">
+          <div class="field">
+            <label for="f_contact_person">Contact person &amp; mobile number</label>
+            <input type="text" id="f_contact_person" data-field="contact_person" placeholder="Name" />
+          </div>
+          <div class="field">
+            <label for="f_mobile_number">Mobile number</label>
+            <input type="tel" id="f_mobile_number" data-field="mobile_number" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="f_postal_address">Postal address</label>
+          <input type="text" id="f_postal_address" data-field="postal_address" />
+        </div>
+        <div class="field">
+          <label for="f_enumerator_name">Enumerator (your name)</label>
+          <input type="text" id="f_enumerator_name" data-field="enumerator_name" />
+        </div>
+      </div>
+
+      <!-- STEP B -->
+      <div class="step-panel" data-step="B">
+        <div class="step-head"><span class="big-letter">B</span><h2>Employment &amp; Education</h2></div>
+        <div class="field">
+          <label for="f_employed_count">How many family members are formally employed currently?</label>
+          <input type="number" id="f_employed_count" data-field="employed_count" min="0" />
+        </div>
+
+        <div class="field">
+          <label>Table 1 — Employed family members</label>
+          <div class="table-scroll"><table class="data-table" id="tbl_employed">
+            <thead><tr><th>Name</th><th>Highest qualification</th><th>Institution</th><th>Year graduated</th><th>Employer &amp; location</th><th>Gross monthly pay</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+          <button type="button" class="add-row-btn" data-add="employedMembers">+ Add family member</button>
+        </div>
+
+        <div class="field">
+          <label>Table 2 — Unemployed family members (18+, not students, with a trade/tertiary qualification)</label>
+          <div class="table-scroll"><table class="data-table" id="tbl_unemployed">
+            <thead><tr><th>Name</th><th>Highest qualification</th><th>Institution</th><th>Year graduated</th><th>Comments</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+          <button type="button" class="add-row-btn" data-add="unemployedMembers">+ Add family member</button>
+        </div>
+        <div class="field">
+          <label for="f_unemployed_comments">Comments</label>
+          <textarea id="f_unemployed_comments" data-field="unemployed_comments"></textarea>
+        </div>
+
+        <div class="field">
+          <label>Does the household or family own or run a business?</label>
+          <div class="radio-pills" id="businessStatusPills">
+            <label class="radio-pill"><input type="radio" name="business_status" value="formal" /> Yes — formal/registered</label>
+            <label class="radio-pill"><input type="radio" name="business_status" value="informal" /> Yes — informal</label>
+            <label class="radio-pill"><input type="radio" name="business_status" value="none" /> No business</label>
+          </div>
+          <p class="hint">This decides which sections appear next: formal business shows full Sections C–E; informal shows only the business loan question in Section C; either way Sections F and G always follow.</p>
+        </div>
+      </div>
+
+      <!-- STEP C -->
+      <div class="step-panel" data-step="C">
+        <div class="step-head"><span class="big-letter">C</span><h2>Business Background</h2></div>
+        <div class="conditional-note" id="informalNoteC">Business marked as informal — showing only the business loan question (C-8). Full registration/licensing fields are skipped.</div>
+
+        <div id="formalOnlyC">
+          <div class="field">
+            <label>Business activity(ies) undertaken</label>
+            <div id="businessActivities"></div>
+          </div>
+
+          <div class="field-row cols-2">
+            <div class="field"><label for="f_business_name">Name of business</label><input type="text" id="f_business_name" data-field="business_name" /></div>
+            <div class="field"><label for="f_business_date_commenced">Date business commenced</label><input type="date" id="f_business_date_commenced" data-field="business_date_commenced" /></div>
+          </div>
+          <div class="field-row cols-2">
+            <div class="field"><label for="f_business_owner">Business owner</label><input type="text" id="f_business_owner" data-field="business_owner" placeholder="If foreign, refer to IPA form" /></div>
+            <div class="field"><label for="f_other_business_location">Any other business location?</label><input type="text" id="f_other_business_location" data-field="other_business_location" /></div>
+          </div>
+
+          <div class="field">
+            <label>IPA registered?</label>
+            <div class="radio-pills" id="ipaRegisteredPills">
+              <label class="radio-pill"><input type="radio" name="ipa_registered" value="true" /> Yes</label>
+              <label class="radio-pill"><input type="radio" name="ipa_registered" value="false" /> No</label>
+            </div>
+          </div>
+          <div class="field">
+            <label>Business forms registered</label>
+            <div class="table-scroll"><table class="data-table" id="tbl_ipa">
+              <thead><tr><th>Business form</th><th>Date reg'd</th><th>Reg. no.</th><th>Expiry date</th></tr></thead>
+              <tbody></tbody>
+            </table></div>
+          </div>
+
+          <div class="field">
+            <label>Types of licenses</label>
+            <div class="table-scroll"><table class="data-table" id="tbl_licenses">
+              <thead><tr><th>License type</th><th>Have it?</th><th>Receipt no.</th><th>Expiry date</th></tr></thead>
+              <tbody></tbody>
+            </table></div>
+          </div>
+          <div class="field">
+            <label for="f_licenses_comment">Comment</label>
+            <textarea id="f_licenses_comment" data-field="licenses_comment"></textarea>
+          </div>
+          <div class="field">
+            <label for="f_trading_license_file">Upload trading license (photo or PDF)</label>
+            <input type="file" id="f_trading_license_file" accept="application/pdf,image/*" />
+            <p class="hint" id="tradingLicenseStatus"></p>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Able to access a business loan?</label>
+          <div class="radio-pills" id="hasLoanPills">
+            <label class="radio-pill"><input type="radio" name="has_business_loan" value="true" /> Yes</label>
+            <label class="radio-pill"><input type="radio" name="has_business_loan" value="false" /> No</label>
+          </div>
+        </div>
+        <div class="field" id="loanYesBlock">
+          <label>Table 1 — Access to business loan</label>
+          <div class="table-scroll"><table class="data-table" id="tbl_loans">
+            <thead><tr><th>Bank / institution</th><th>Loan amount</th><th>Date of loan</th><th>On schedule?</th><th>Comments</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+          <button type="button" class="add-row-btn" data-add="businessLoans">+ Add loan</button>
+        </div>
+        <div class="field" id="loanNoBlock">
+          <label for="f_no_loan_reasons">Table 2 — Why are you not able to access business loans?</label>
+          <textarea id="f_no_loan_reasons" data-field="no_loan_reasons"></textarea>
+        </div>
+      </div>
+
+      <!-- STEP D -->
+      <div class="step-panel" data-step="D">
+        <div class="step-head"><span class="big-letter">D</span><h2>Business Development Assistance</h2></div>
+        <div class="field">
+          <label>Training attended</label>
+          <div class="table-scroll"><table class="data-table" id="tbl_trainings_attended">
+            <thead><tr><th>Type of training</th><th>Attended?</th><th>Facilitator</th></tr></thead>
+            <tbody></tbody>
+          </table></div>
+        </div>
+        <div class="field">
+          <label>Type of training required</label>
+          <div id="trainingsRequired"></div>
+          <input type="text" id="f_other_trainings_required" data-field="other_trainings_required" placeholder="Other specific training required" style="margin-top:8px;" />
+        </div>
+        <div class="field">
+          <label>Type of assistance required</label>
+          <div id="assistanceRequired"></div>
+        </div>
+        <div class="field">
+          <label for="f_assistance_comment">Comment</label>
+          <textarea id="f_assistance_comment" data-field="assistance_comment"></textarea>
+        </div>
+      </div>
+
+      <!-- STEP E -->
+      <div class="step-panel" data-step="E">
+        <div class="step-head"><span class="big-letter">E</span><h2>Economic Output Development</h2></div>
+        <h3 style="font-family:var(--font-display); font-size:14px; color:var(--pine-deep); margin:0 0 8px;">1. Employment</h3>
+        <div class="field-row cols-2">
+          <div class="field"><label for="f_emp_casuals_no">No. of casuals</label><input type="number" id="f_emp_casuals_no" data-field="emp_casuals_no" min="0" /></div>
+          <div class="field"><label for="f_emp_casuals_years">Years employed (casuals)</label><input type="number" id="f_emp_casuals_years" data-field="emp_casuals_years" min="0" /></div>
+        </div>
+        <div class="field-row cols-2">
+          <div class="field"><label for="f_emp_permanent_no">No. of permanent</label><input type="number" id="f_emp_permanent_no" data-field="emp_permanent_no" min="0" /></div>
+          <div class="field"><label for="f_emp_permanent_years">Years employed (permanent)</label><input type="number" id="f_emp_permanent_years" data-field="emp_permanent_years" min="0" /></div>
+        </div>
+        <div class="field-row cols-2">
+          <div class="field"><label for="f_wages_casual_fortnightly">Casual wages, fortnightly (K)</label><input type="number" id="f_wages_casual_fortnightly" data-field="wages_casual_fortnightly" min="0" step="0.01" /></div>
+          <div class="field"><label for="f_wages_permanent_fortnightly">Permanent wages, fortnightly (K)</label><input type="number" id="f_wages_permanent_fortnightly" data-field="wages_permanent_fortnightly" min="0" step="0.01" /></div>
+        </div>
+
+        <h3 style="font-family:var(--font-display); font-size:14px; color:var(--pine-deep); margin:18px 0 8px;">2. Investment</h3>
+        <div class="field">
+          <label>2.1 Monthly turnover</label>
+          <select id="f_turnover_bracket" data-field="turnover_bracket">
+            <option value="">Select bracket</option>
+            <option value="a">Less than K60,000</option>
+            <option value="b">K60,001 – K250,000</option>
+            <option value="c">K250,000 – K5,000,000</option>
+            <option value="d">Over K5,000,000</option>
+          </select>
+        </div>
+        <div class="field"><label for="f_turnover_amount">Amount (K)</label><input type="number" id="f_turnover_amount" data-field="turnover_amount" min="0" step="0.01" /></div>
+
+        <div class="field">
+          <label>2.2 Estimated monthly expenses</label>
+          <select id="f_expenses_bracket" data-field="expenses_bracket">
+            <option value="">Select bracket</option>
+            <option value="1">Less than K5,000</option>
+            <option value="2">K5,001 – K250,000</option>
+            <option value="3">K250,001 – K500,000</option>
+            <option value="4">Over K500,001</option>
+          </select>
+        </div>
+        <div class="field"><label for="f_expenses_amount">Amount (K)</label><input type="number" id="f_expenses_amount" data-field="expenses_amount" min="0" step="0.01" /></div>
+
+        <div class="field-row cols-2">
+          <div class="field"><label for="f_initial_capital">2.3 Initial capital (K)</label><input type="number" id="f_initial_capital" data-field="initial_capital" min="0" step="0.01" /></div>
+          <div class="field"><label for="f_asset_value">2.4 Value of assets to date (K)</label><input type="number" id="f_asset_value" data-field="asset_value" min="0" step="0.01" /></div>
+        </div>
+        <div class="field-row cols-2">
+          <div class="field"><label for="f_other_investments">2.5 Other investments (K)</label><input type="number" id="f_other_investments" data-field="other_investments" min="0" step="0.01" /></div>
+          <div class="field"><label for="f_other_investments_specify">Specify</label><input type="text" id="f_other_investments_specify" data-field="other_investments_specify" /></div>
+        </div>
+      </div>
+
+      <!-- STEP F -->
+      <div class="step-panel" data-step="F">
+        <div class="step-head"><span class="big-letter">F</span><h2>Cash Crops</h2></div>
+        <div class="table-scroll"><table class="data-table" id="tbl_cash_crops">
+          <thead><tr><th>Cash crop</th><th>No. of blocks</th><th>No. of trees</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+        <button type="button" class="add-row-btn" data-add="cashCrops">+ Add other crop</button>
+        <div class="field" style="margin-top:14px;">
+          <label for="f_cash_crops_comment">Comments</label>
+          <textarea id="f_cash_crops_comment" data-field="cash_crops_comment"></textarea>
+        </div>
+      </div>
+
+      <!-- STEP G -->
+      <div class="step-panel" data-step="G">
+        <div class="step-head"><span class="big-letter">G</span><h2>Informal Business Sector</h2></div>
+        <p class="hint" style="margin:-8px 0 14px;">Other household members running informal businesses, separate from the main business above.</p>
+        <div class="table-scroll"><table class="data-table" id="tbl_informal">
+          <thead><tr><th>Name of owner</th><th>Type of business activity</th><th>Year established</th><th>Monthly turnover</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+        <button type="button" class="add-row-btn" data-add="informalBusinesses">+ Add entry</button>
+        <div class="field" style="margin-top:14px;">
+          <label for="f_informal_comment">Comments</label>
+          <textarea id="f_informal_comment" data-field="informal_comment"></textarea>
+        </div>
+      </div>
+
+      <div class="step-nav">
+        <button type="button" class="btn btn-ghost" id="btnBack">Back</button>
+        <button type="button" class="btn btn-primary" id="btnNext">Next</button>
+        <button type="button" class="btn btn-primary" id="btnSubmit" style="display:none;">Save survey</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ============ RECORDS ============ -->
+  <section class="view" id="view-records">
+    <h2 class="section-title">Records</h2>
+    <div class="toolbar">
+      <input type="search" id="searchInput" placeholder="Search name, household no., village…" />
+      <select id="filterDistrict"><option value="">All districts</option><option>Gazelle</option><option>Kokopo</option><option>Pomio</option><option>Rabaul</option></select>
+      <select id="filterStatus"><option value="">All business status</option><option value="formal">Formal</option><option value="informal">Informal</option><option value="none">No business</option></select>
+      <button class="btn btn-ghost btn-sm" id="btnExportCsv">Export CSV</button>
+    </div>
+    <div id="recordsList"></div>
+  </section>
+
+</main>
+
+<div class="modal-backdrop" id="detailModalBackdrop">
+  <div class="modal" style="position:relative;">
+    <button class="close-x" id="closeDetailModal">&times;</button>
+    <div id="detailModalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// CONFIG — replace with your Supabase project values
+// ============================================================
+const SUPABASE_URL = "YOUR_SUPABASE_URL";
+const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const TABLE = "msme_surveys";
+const BUCKET = "trading-licenses";
+</script>
+<script src="app.js"></script>
+</body>
+</html>
