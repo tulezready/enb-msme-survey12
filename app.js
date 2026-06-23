@@ -812,7 +812,72 @@ async function refreshAllData(){
   renderRecords();
 }
 
-async function init(){
+// ------------------------------------------------------------
+// Setup / credentials screen
+// ------------------------------------------------------------
+function showSetupScreen(prefill){
+  const overlay = document.getElementById("setupOverlay");
+  overlay.style.display = "flex";
+  if (prefill){
+    const { url, key } = getStoredCreds();
+    document.getElementById("setupUrl").value = url;
+    document.getElementById("setupKey").value = key;
+  }
+}
+function hideSetupScreen(){
+  document.getElementById("setupOverlay").style.display = "none";
+}
+
+async function trySaveCredentials(){
+  const url = document.getElementById("setupUrl").value.trim();
+  const key = document.getElementById("setupKey").value.trim();
+  const errEl = document.getElementById("setupError");
+  const btn = document.getElementById("setupSaveBtn");
+
+  errEl.style.display = "none";
+  if (!url.startsWith("https://") || key.length < 20){
+    errEl.textContent = "Please enter a valid Supabase URL and key.";
+    errEl.style.display = "block";
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Connecting…';
+
+  try {
+    // Test the connection by doing a lightweight query
+    initSupabase(url, key);
+    const { error } = await supabase.from(TABLE).select("id").limit(1);
+    if (error) throw error;
+
+    localStorage.setItem("sb_url", url);
+    localStorage.setItem("sb_key", key);
+    hideSetupScreen();
+    await startApp();
+  } catch(e){
+    errEl.textContent = "Could not connect — check your URL and key and try again.";
+    errEl.style.display = "block";
+    supabase = null;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Connect & Open App";
+  }
+}
+
+document.getElementById("setupSaveBtn").addEventListener("click", trySaveCredentials);
+document.getElementById("settingsBtn").addEventListener("click", () => showSetupScreen(true));
+
+// Allow pressing Enter in setup fields
+["setupUrl","setupKey"].forEach(id => {
+  document.getElementById(id).addEventListener("keydown", (e) => {
+    if (e.key === "Enter") trySaveCredentials();
+  });
+});
+
+// ------------------------------------------------------------
+// App startup
+// ------------------------------------------------------------
+async function startApp(){
   wireRadioPills("businessStatusPills", (val) => applyBusinessStatus(val));
   wireRadioPills("ipaRegisteredPills", (val) => { state.ipaRegisteredValue = val; });
   wireRadioPills("hasLoanPills", (val) => { state.hasLoanValue = val; applyLoanStatus(val); });
@@ -828,9 +893,19 @@ async function init(){
     .subscribe();
 
   if ("serviceWorker" in navigator){
-    navigator.serviceWorker.register("sw.js").catch(err => console.warn("Service worker registration failed:", err));
+    navigator.serviceWorker.register("sw.js").catch(err => console.warn("SW registration failed:", err));
+  }
+}
+
+async function init(){
+  if (credsSaved()){
+    const { url, key } = getStoredCreds();
+    initSupabase(url, key);
+    hideSetupScreen();
+    await startApp();
+  } else {
+    showSetupScreen(false);
   }
 }
 
 init();
-
