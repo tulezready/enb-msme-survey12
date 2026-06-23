@@ -318,9 +318,57 @@
     text-align:center; padding:7px; display:none;
   }
   .sync-banner.show{display:block;}
+
+  /* ---------- Setup / credentials screen ---------- */
+  .setup-overlay{
+    position:fixed; inset:0; background:var(--pine-deep); z-index:200;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .setup-card{
+    background:#fff; border-radius:14px; padding:28px 22px; width:100%; max-width:420px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.4);
+  }
+  .setup-card .crest-lg{
+    width:56px; height:56px; border-radius:50%; background:var(--ochre);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-display); font-weight:700; font-size:20px; color:var(--pine-deep);
+    margin:0 auto 14px;
+  }
+  .setup-card h2{
+    font-family:var(--font-display); font-size:20px; color:var(--pine-deep);
+    text-align:center; margin:0 0 4px;
+  }
+  .setup-card .sub{text-align:center; font-size:13px; color:var(--ink-soft); margin:0 0 22px;}
+  .setup-card .field{margin-bottom:14px;}
+  .setup-card label{font-size:12px; font-weight:700; color:var(--ink-soft); display:block; margin-bottom:5px;}
+  .setup-card input{width:100%; padding:11px 12px; border:1.5px solid var(--line); border-radius:8px; font-size:14px; font-family:inherit;}
+  .setup-card input:focus{border-color:var(--pine); outline:none;}
+  .setup-card .hint{font-size:11.5px; color:var(--ink-soft); margin-top:16px; line-height:1.5; text-align:center;}
+  .setup-card .hint a{color:var(--pine);}
+  #setupError{color:var(--rust); font-size:13px; margin-bottom:10px; display:none; text-align:center;}
 </style>
 </head>
 <body>
+
+<!-- Setup / credentials overlay -->
+<div class="setup-overlay" id="setupOverlay">
+  <div class="setup-card">
+    <div class="crest-lg">ENB</div>
+    <h2>Connect to Supabase</h2>
+    <p class="sub">Enter your Supabase project credentials to get started. These are saved on this device.</p>
+    <div class="field">
+      <label>Project URL</label>
+      <input type="url" id="setupUrl" placeholder="https://xxxxxxxxxxx.supabase.co" autocomplete="off" autocorrect="off" spellcheck="false" />
+    </div>
+    <div class="field">
+      <label>Anon / Public Key</label>
+      <input type="text" id="setupKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." autocomplete="off" autocorrect="off" spellcheck="false" />
+    </div>
+    <div id="setupError">Could not connect — check your URL and key and try again.</div>
+    <button class="btn btn-primary btn-block" id="setupSaveBtn" style="margin-top:4px;">Connect &amp; Open App</button>
+    <p class="hint">Find these in your Supabase project under<br><strong>Project Settings → API</strong>.<br>Your credentials are only stored on this device.</p>
+  </div>
+</div>
 
 <div class="sync-banner" id="syncBanner">Working offline from your last sync — changes will save once you're back online.</div>
 
@@ -332,6 +380,7 @@
       <h1>Economic &amp; MSME Survey</h1>
     </div>
     <div class="topbar-meta" id="topbarMeta">East New Britain Provincial Administration</div>
+    <button class="btn btn-ghost btn-sm" id="settingsBtn" style="color:#fff;border-color:rgba(255,255,255,0.3);margin-left:8px;flex:none;">⚙ Settings</button>
   </div>
   <nav class="tabs">
     <button class="tab-btn active" data-view="dashboard">Dashboard</button>
@@ -686,14 +735,27 @@
 
 <script>
 // ============================================================
-// CONFIG — replace with your Supabase project values
+// Supabase credentials — stored in localStorage, entered via
+// the setup screen on first open (or via Settings any time)
 // ============================================================
-const SUPABASE_URL = "https://lgfdzxcawggxrqvsgzpz.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_cX_rXW51KpL-k9arZupk9w_6MS9Jlo_";
-
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const TABLE = "msme_surveys";
 const BUCKET = "trading-licenses";
+
+let supabase = null;
+
+function getStoredCreds(){
+  return {
+    url: localStorage.getItem("sb_url") || "",
+    key: localStorage.getItem("sb_key") || ""
+  };
+}
+function initSupabase(url, key){
+  supabase = window.supabase.createClient(url, key);
+}
+function credsSaved(){
+  const { url, key } = getStoredCreds();
+  return url.startsWith("https://") && key.length > 20;
+}
 </script>
 <script src="app.js"></script>
 </body>
