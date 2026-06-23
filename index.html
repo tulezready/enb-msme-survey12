@@ -350,26 +350,6 @@
 </head>
 <body>
 
-<!-- Setup / credentials overlay -->
-<div class="setup-overlay" id="setupOverlay">
-  <div class="setup-card">
-    <div class="crest-lg">ENB</div>
-    <h2>Connect to Supabase</h2>
-    <p class="sub">Enter your Supabase project credentials to get started. These are saved on this device.</p>
-    <div class="field">
-      <label>Project URL</label>
-      <input type="url" id="setupUrl" placeholder="https://xxxxxxxxxxx.supabase.co" autocomplete="off" autocorrect="off" spellcheck="false" />
-    </div>
-    <div class="field">
-      <label>Anon / Public Key</label>
-      <input type="text" id="setupKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." autocomplete="off" autocorrect="off" spellcheck="false" />
-    </div>
-    <div id="setupError">Could not connect — check your URL and key and try again.</div>
-    <button class="btn btn-primary btn-block" id="setupSaveBtn" style="margin-top:4px;">Connect &amp; Open App</button>
-    <p class="hint">Find these in your Supabase project under<br><strong>Project Settings → API</strong>.<br>Your credentials are only stored on this device.</p>
-  </div>
-</div>
-
 <div class="sync-banner" id="syncBanner">Working offline from your last sync — changes will save once you're back online.</div>
 
 <header class="topbar">
@@ -380,7 +360,6 @@
       <h1>Economic &amp; MSME Survey</h1>
     </div>
     <div class="topbar-meta" id="topbarMeta">East New Britain Provincial Administration</div>
-    <button class="btn btn-ghost btn-sm" id="settingsBtn" style="color:#fff;border-color:rgba(255,255,255,0.3);margin-left:8px;flex:none;">⚙ Settings</button>
   </div>
   <nav class="tabs">
     <button class="tab-btn active" data-view="dashboard">Dashboard</button>
@@ -734,28 +713,11 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ============================================================
-// Supabase credentials — stored in localStorage, entered via
-// the setup screen on first open (or via Settings any time)
-// ============================================================
+const SUPABASE_URL = "https://lgfdzxcawggxrqvsgzpz.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxnZmR6eGNhd2dneHJxdnNnenB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwODc0NjgsImV4cCI6MjA5NzY2MzQ2OH0.6Gl95mpLNByoHw9FJi3swYvGtd5pLygTw7H1uAQ_w7s";
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const TABLE = "msme_surveys";
 const BUCKET = "trading-licenses";
-
-let supabase = null;
-
-function getStoredCreds(){
-  return {
-    url: localStorage.getItem("sb_url") || "",
-    key: localStorage.getItem("sb_key") || ""
-  };
-}
-function initSupabase(url, key){
-  supabase = window.supabase.createClient(url, key);
-}
-function credsSaved(){
-  const { url, key } = getStoredCreds();
-  return url.startsWith("https://") && key.length > 20;
-}
 </script>
 <script src="app.js"></script>
 </body>
