@@ -594,17 +594,20 @@ window.addEventListener('offline',()=>document.getElementById('syncBanner').clas
 
 // ── Init ───────────────────────────────────────────────────
 async function init(){
-  wireRadioPills('businessStatusPills', val=>{applyBusinessStatus(val);renderStepper();});
-  wireRadioPills('ipaRegisteredPills',  val=>{state.ipaRegisteredValue=val;});
-  wireRadioPills('hasLoanPills',        val=>{state.hasLoanValue=val;applyLoanStatus(val);});
-  resetForm();
-  if(!navigator.onLine) document.getElementById('syncBanner').classList.add('show');
-  await refreshAllData();
-  supabase.channel('msme-changes')
-    .on('postgres_changes',{event:'*',schema:'public',table:TABLE},()=>refreshAllData())
-    .subscribe();
-  if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+  try {
+    wireRadioPills('businessStatusPills', val=>{applyBusinessStatus(val);renderStepper();});
+    wireRadioPills('ipaRegisteredPills',  val=>{state.ipaRegisteredValue=val;});
+    wireRadioPills('hasLoanPills',        val=>{state.hasLoanValue=val;applyLoanStatus(val);});
+    resetForm();
+    if(!navigator.onLine) document.getElementById('syncBanner').classList.add('show');
+    await refreshAllData();
+    supabase.channel('msme-changes')
+      .on('postgres_changes',{event:'*',schema:'public',table:TABLE},()=>refreshAllData())
+      .subscribe();
+    if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+  } catch(err) {
+    alert('App init error: ' + err.message);
+  }
 }
 
 init();
-
