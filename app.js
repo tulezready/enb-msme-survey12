@@ -813,66 +813,9 @@ async function refreshAllData(){
 }
 
 // ------------------------------------------------------------
-// Setup / credentials screen
+// Init
 // ------------------------------------------------------------
-function showSetupScreen(prefill){
-  const overlay = document.getElementById("setupOverlay");
-  overlay.style.display = "flex";
-  if (prefill){
-    const { url, key } = getStoredCreds();
-    document.getElementById("setupUrl").value = url;
-    document.getElementById("setupKey").value = key;
-  }
-}
-function hideSetupScreen(){
-  document.getElementById("setupOverlay").style.display = "none";
-}
-
-async function trySaveCredentials(){
-  const url = document.getElementById("setupUrl").value.trim();
-  const key = document.getElementById("setupKey").value.trim();
-  const errEl = document.getElementById("setupError");
-  const btn = document.getElementById("setupSaveBtn");
-
-  errEl.style.display = "none";
-  if (!url.startsWith("https://") || key.length < 20){
-    errEl.textContent = "Please enter a valid Supabase URL and key.";
-    errEl.style.display = "block";
-    return;
-  }
-
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Connecting…';
-
-  try {
-    localStorage.setItem("sb_url", url);
-    localStorage.setItem("sb_key", key);
-    initSupabase(url, key);
-    hideSetupScreen();
-    await startApp();
-  } catch(e){
-    errEl.textContent = "Something went wrong — please try again.";
-    errEl.style.display = "block";
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Connect & Open App";
-  }
-}
-
-document.getElementById("setupSaveBtn").addEventListener("click", trySaveCredentials);
-document.getElementById("settingsBtn").addEventListener("click", () => showSetupScreen(true));
-
-// Allow pressing Enter in setup fields
-["setupUrl","setupKey"].forEach(id => {
-  document.getElementById(id).addEventListener("keydown", (e) => {
-    if (e.key === "Enter") trySaveCredentials();
-  });
-});
-
-// ------------------------------------------------------------
-// App startup
-// ------------------------------------------------------------
-async function startApp(){
+async function init(){
   wireRadioPills("businessStatusPills", (val) => applyBusinessStatus(val));
   wireRadioPills("ipaRegisteredPills", (val) => { state.ipaRegisteredValue = val; });
   wireRadioPills("hasLoanPills", (val) => { state.hasLoanValue = val; applyLoanStatus(val); });
@@ -889,17 +832,6 @@ async function startApp(){
 
   if ("serviceWorker" in navigator){
     navigator.serviceWorker.register("sw.js").catch(err => console.warn("SW registration failed:", err));
-  }
-}
-
-async function init(){
-  if (credsSaved()){
-    const { url, key } = getStoredCreds();
-    initSupabase(url, key);
-    hideSetupScreen();
-    await startApp();
-  } else {
-    showSetupScreen(false);
   }
 }
 
