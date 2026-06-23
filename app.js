@@ -527,22 +527,12 @@ async function uploadTradingLicenseIfNeeded(){
 }
 
 async function saveSurvey(){
-  if (!navigator.onLine){ toast("You're offline — connect to save this survey."); return; }
-  const district = document.getElementById("f_district").value;
-  const householdNo = document.getElementById("f_household_no").value;
-  if (!district || !householdNo.trim()){
-    alert("Please fill in District and Household No. in Section A before saving.");
-    currentStepIndex = 0; showStep("A");
-    return;
-  }
-
   const btn = document.getElementById("btnSubmit");
   const originalLabel = btn.innerHTML;
   btn.disabled = true;
   btn.innerHTML = `<span class="spinner"></span> Saving…`;
 
   try {
-    state.tradingLicenseUrl = await uploadTradingLicenseIfNeeded();
     const payload = collectForm();
 
     let error;
@@ -551,12 +541,20 @@ async function saveSurvey(){
     } else {
       ({ error } = await supabase.from(TABLE).insert(payload));
     }
-    if (error){ console.error(error); toast("Save failed: " + error.message); return; }
+
+    if (error){
+      console.error(error);
+      alert("Save failed: " + error.message);
+      return;
+    }
 
     toast(state.id ? "Survey updated." : "Survey saved.");
     resetForm();
     switchView("records");
     await refreshAllData();
+  } catch(err){
+    console.error(err);
+    alert("Unexpected error: " + err.message);
   } finally {
     btn.disabled = false;
     btn.innerHTML = originalLabel;
@@ -836,3 +834,4 @@ async function init(){
 }
 
 init();
+
