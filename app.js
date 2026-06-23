@@ -1,6 +1,8 @@
 // ============================================================
 // ENB Economic & MSME Survey — app logic
 // ============================================================
+const TABLE = "msme_surveys";
+const BUCKET = "trading-licenses";
 
 const STEP_ORDER = ["A","B","C","D","E","F","G"];
 const STEP_TITLE = {A:"Location", B:"Employment & Education", C:"Business Background", D:"Business Development Assistance", E:"Economic Output", F:"Cash Crops", G:"Informal Business Sector"};
@@ -834,4 +836,3 @@ async function init(){
 }
 
 init();
-
