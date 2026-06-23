@@ -360,7 +360,10 @@ function showStep(stepLetter){
   document.getElementById("btnBack").disabled = (currentStepIndex === 0);
   const isLast = (currentStepIndex === activeSteps.length - 1);
   document.getElementById("btnNext").style.display = isLast ? "none" : "";
-  document.getElementById("btnSubmit").style.display = isLast ? "" : "none";
+  // Show Save on last step; also show a smaller Save on other steps so
+  // enumerators don't have to reach the end to save partial data
+  document.getElementById("btnSubmit").style.display = "";
+  document.getElementById("btnSubmit").textContent = isLast ? "Save survey" : "Save progress";
   renderStepper();
   window.scrollTo({top:0, behavior:"smooth"});
 }
@@ -528,7 +531,7 @@ async function saveSurvey(){
   const district = document.getElementById("f_district").value;
   const householdNo = document.getElementById("f_household_no").value;
   if (!district || !householdNo.trim()){
-    toast("District and Household No. are required (Section A).");
+    alert("Please fill in District and Household No. in Section A before saving.");
     currentStepIndex = 0; showStep("A");
     return;
   }
@@ -830,3 +833,4 @@ async function init(){
 }
 
 init();
+
