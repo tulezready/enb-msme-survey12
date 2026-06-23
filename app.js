@@ -134,20 +134,21 @@ function bindFixed(tbody, arr){
   });
 }
 
-function renderAddable(tbodySel, arr, rowFn, rerender){
-  document.querySelector(tbodySel+' tbody').innerHTML=arr.map((r,i)=>rowFn(r,i)).join('');
-  document.querySelector(tbodySel+' tbody').querySelectorAll('[data-key]').forEach(inp=>{
+function renderAddable(tableId, arr, rowFn, rerender){
+  const tbody=document.querySelector('#'+tableId+' tbody');
+  tbody.innerHTML=arr.map((r,i)=>rowFn(r,i)).join('');
+  tbody.querySelectorAll('[data-key]').forEach(inp=>{
     inp.addEventListener(inp.tagName==='SELECT'?'change':'input',()=>{
       arr[+inp.closest('tr').dataset.idx][inp.dataset.key]=inp.value;
     });
   });
-  document.querySelector(tbodySel+' tbody').querySelectorAll('.rm-row').forEach(btn=>{
+  tbody.querySelectorAll('.rm-row').forEach(btn=>{
     btn.addEventListener('click',()=>{arr.splice(+btn.closest('tr').dataset.idx,1);rerender();});
   });
 }
 
 function renderEmployedTable(){
-  renderAddable('#tbl_employed', state.employedMembers, (r,i)=>`
+  renderAddable('tbl_employed', state.employedMembers, (r,i)=>`
     <tr data-idx="${i}">
       <td><input type="text" data-key="name" value="${esc(r.name)}"/></td>
       <td><input type="text" data-key="qualification" value="${esc(r.qualification)}"/></td>
@@ -159,7 +160,7 @@ function renderEmployedTable(){
 }
 
 function renderUnemployedTable(){
-  renderAddable('#tbl_unemployed', state.unemployedMembers, (r,i)=>`
+  renderAddable('tbl_unemployed', state.unemployedMembers, (r,i)=>`
     <tr data-idx="${i}">
       <td><input type="text" data-key="name" value="${esc(r.name)}"/></td>
       <td><input type="text" data-key="qualification" value="${esc(r.qualification)}"/></td>
@@ -170,7 +171,7 @@ function renderUnemployedTable(){
 }
 
 function renderLoansTable(){
-  renderAddable('#tbl_loans', state.businessLoans, (r,i)=>`
+  renderAddable('tbl_loans', state.businessLoans, (r,i)=>`
     <tr data-idx="${i}">
       <td><input type="text" data-key="bank" value="${esc(r.bank)}"/></td>
       <td><input type="number" data-key="amount" value="${esc(r.amount)}" style="min-width:80px"/></td>
@@ -181,7 +182,7 @@ function renderLoansTable(){
 }
 
 function renderCashCropsTable(){
-  renderAddable('#tbl_cash_crops', state.cashCrops, (r,i)=>`
+  renderAddable('tbl_cash_crops', state.cashCrops, (r,i)=>`
     <tr data-idx="${i}">
       <td>${r.fixed?esc(r.crop):`<input type="text" data-key="crop" value="${esc(r.crop)}" placeholder="Crop name"/>`}</td>
       <td><input type="number" data-key="blocks" value="${esc(r.blocks)}" style="min-width:70px"/></td>
@@ -190,7 +191,7 @@ function renderCashCropsTable(){
 }
 
 function renderInformalTable(){
-  renderAddable('#tbl_informal', state.informalBusinesses, (r,i)=>`
+  renderAddable('tbl_informal', state.informalBusinesses, (r,i)=>`
     <tr data-idx="${i}">
       <td><input type="text" data-key="owner_name" value="${esc(r.owner_name)}"/></td>
       <td><input type="text" data-key="activity_type" value="${esc(r.activity_type)}"/></td>
