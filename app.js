@@ -845,19 +845,14 @@ async function trySaveCredentials(){
   btn.innerHTML = '<span class="spinner"></span> Connecting…';
 
   try {
-    // Test the connection by doing a lightweight query
-    initSupabase(url, key);
-    const { error } = await supabase.from(TABLE).select("id").limit(1);
-    if (error) throw error;
-
     localStorage.setItem("sb_url", url);
     localStorage.setItem("sb_key", key);
+    initSupabase(url, key);
     hideSetupScreen();
     await startApp();
   } catch(e){
-    errEl.textContent = "Could not connect — check your URL and key and try again.";
+    errEl.textContent = "Something went wrong — please try again.";
     errEl.style.display = "block";
-    supabase = null;
   } finally {
     btn.disabled = false;
     btn.textContent = "Connect & Open App";
